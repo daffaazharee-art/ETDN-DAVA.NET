@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1e3a8a">
+    <title>EXPENSE TRACKER DAVA.NET</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap');
+        :root { --dava-blue: #1e3a8a; --dava-yellow: #fff100; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; overflow-x: hidden; width: 100%; -webkit-tap-highlight-color: transparent; }
+        
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+        .btn-menu { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border-bottom: 6px solid rgba(0,0,0,0.15); cursor: pointer; }
+        .btn-menu:active { transform: translateY(4px); border-bottom-width: 0px; }
+        .wa-bg { background-color: #25D366; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #1e3a8a; border-radius: 10px; }
+        
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="antialiased text-slate-800">
+
+<div id="portal-login" class="min-h-screen w-full bg-blue-900 flex items-center justify-center px-4 hidden">
+    <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-sm text-center fade-in border-4 border-[#fff100]">
+        <div class="w-24 h-24 mx-auto bg-blue-50 rounded-3xl flex items-center justify-center mb-6 shadow-inner p-2">
+            <img src="logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.style.display='none'">
+        </div>
+        <h2 class="text-3xl font-black italic text-blue-900 tracking-tighter uppercase mb-1">DAVA.NET</h2>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-8 border-b-2 border-slate-100 pb-6">EXPENSE TRACKER</p>
+        
+        <button id="btn-google" onclick="openGoogleLogin()" class="w-full bg-white border-2 border-slate-200 text-slate-700 py-4 rounded-2xl font-bold text-sm active:scale-95 transition-all flex items-center justify-center gap-3 shadow-sm hover:bg-slate-50">
+            <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <span id="btn-text">Masuk dengan Google</span>
+        </button>
+        <p class="text-[9px] font-bold text-slate-400 mt-6 uppercase tracking-widest">Sistem Keamanan Terenkripsi</p>
+    </div>
+</div>
+
+<div id="modal-register" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[2000] hidden flex items-center justify-center p-5">
+    <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl fade-in text-center border-4 border-emerald-500">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">👤</div>
+        <h3 class="font-black text-xl text-slate-800 mb-1 italic">PROFIL ADMIN</h3>
+        <p class="text-[10px] text-slate-500 font-bold mb-6">Akun Google Anda belum didaftarkan. Pastikan nama profil Anda benar untuk laporan penagihan.</p>
+        <input type="text" id="reg-admin-name" placeholder="Nama Lengkap Admin" class="w-full bg-slate-50 border-2 border-slate-200 p-4 rounded-xl font-black uppercase text-sm outline-none focus:border-emerald-500 mb-4 text-center text-emerald-700">
+        <button onclick="processRegister()" class="w-full bg-emerald-500 text-white py-4 rounded-xl font-black text-[11px] uppercase tracking-widest border-b-4 border-emerald-700 active:translate-y-1 active:border-b-0">MASUK APLIKASI</button>
+    </div>
+</div>
+
+<div id="app-container" class="max-w-md mx-auto min-h-screen bg-white relative shadow-2xl overflow-hidden hidden">
+    
+    <header class="bg-white px-6 py-4 flex items-center justify-between sticky top-0 z-40 border-b-2 border-slate-100 shadow-sm">
+        <div class="flex items-center gap-3">
+            <img src="logo.png" alt="Logo" class="w-10 h-10 object-contain rounded-lg" onerror="this.style.display='none'">
+            <div>
+                <h1 class="text-lg font-black italic text-blue-900 tracking-tighter uppercase leading-none">Dava.Net</h1>
+                <p id="header-role" class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Sistem Keuangan</p>
+            </div>
+        </div>
+        <button onclick="logout()" class="bg-rose-50 text-rose-500 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border border-rose-100 active:scale-95">Keluar</button>
+    </header>
+
+    <div id="section-owner" class="page-section p-5 bg-slate-50 min-h-screen pb-24">
+        <h2 class="text-xl font-black italic text-blue-900 tracking-tighter uppercase mb-4">👑 DASHBOARD OWNER</h2>
+        
+        <div class="bg-blue-900 p-7 rounded-[2.5rem] text-white relative overflow-hidden shadow-xl mb-4">
+            <p class="text-[9px] font-black uppercase tracking-widest opacity-70 mb-1">Total Pemasukan Seluruh Admin</p>
+            <h3 id="owner-omzet" class="text-4xl font-black italic text-[#fff100] tracking-tighter leading-none">Rp 0</h3>
+            <div class="mt-5 grid grid-cols-2 gap-3 border-t border-white/20 pt-4">
+                <div>
+                    <p class="text-[8px] font-bold uppercase opacity-60 mb-1">TUNAI (CASH)</p>
+                    <p id="owner-cash" class="text-lg font-black text-emerald-300">Rp 0</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[8px] font-bold uppercase opacity-60 mb-1">TRANSFER (TF)</p>
+                    <p id="owner-tf" class="text-lg font-black text-blue-300">Rp 0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-[2rem] border-2 border-slate-100 shadow-sm text-center">
+                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Piutang</p>
+                <p id="owner-piutang" class="text-xl font-black text-rose-500">Rp 0</p>
+            </div>
+            <div class="bg-orange-500 p-5 rounded-[2rem] shadow-sm text-white text-center">
+                <p class="text-[8px] font-bold uppercase tracking-widest opacity-80 mb-1">Total Komisi Admin</p>
+                <p id="owner-total-komisi" class="text-xl font-black italic">Rp 0</p>
+            </div>
+        </div>
+
+        <button onclick="exportOwnerData()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mb-6 shadow-lg active:scale-95 flex items-center justify-center gap-2 border-b-4 border-emerald-800">
+            <span>📊</span> EXPORT MASTER DATA (EXCEL)
+        </button>
+
+        <h3 class="text-sm font-black text-slate-600 uppercase tracking-widest mb-3 ml-2 border-l-4 border-blue-900 pl-2">Laporan Kinerja Admin</h3>
+        <p class="text-[9px] font-bold text-slate-400 mb-4 ml-2">Klik nama admin untuk melihat detail penagihan.</p>
+        
+        <div id="owner-admin-list" class="space-y-3 pb-10">
+            </div>
+    </div>
+
+    <div id="section-admin-menu" class="page-section p-5 bg-slate-50 min-h-screen pb-24">
+        <div class="bg-white p-4 rounded-[2rem] mb-6 flex items-center gap-3 border-2 border-slate-100 shadow-sm">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">👤</div>
+            <div>
+                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Selamat Bertugas,</p>
+                <p id="admin-welcome-name" class="text-base font-black text-blue-900 uppercase italic leading-none">NAMA ADMIN</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="navigateAdmin('belum')" class="btn-menu bg-rose-500 p-6 rounded-[2.5rem] text-white shadow-lg flex flex-col items-center justify-center h-36">
+                <div class="bg-white/20 p-2 rounded-2xl mb-2 text-xl">⏳</div>
+                <span class="text-[9px] font-black uppercase tracking-widest text-center leading-tight">Belum<br>Bayar</span>
+            </button>
+            <button onclick="navigateAdmin('lunas_cash')" class="btn-menu bg-emerald-500 p-6 rounded-[2.5rem] text-white shadow-lg flex flex-col items-center justify-center h-36">
+                <div class="bg-white/20 p-2 rounded-2xl mb-2 text-xl">💵</div>
+                <span class="text-[9px] font-black uppercase tracking-widest text-center leading-tight">Lunas<br>(CASH)</span>
+            </button>
+            <button onclick="navigateAdmin('lunas_tf')" class="btn-menu bg-blue-500 p-6 rounded-[2.5rem] text-white shadow-lg flex flex-col items-center justify-center h-36">
+                <div class="bg-white/20 p-2 rounded-2xl mb-2 text-xl">📱</div>
+                <span class="text-[9px] font-black uppercase tracking-widest text-center leading-tight">Lunas<br>(TF)</span>
+            </button>
+            <button onclick="navigateAdmin('database')" class="btn-menu bg-blue-800 p-6 rounded-[2.5rem] text-white shadow-lg flex flex-col items-center justify-center h-36">
+                <div class="bg-white/20 p-2 rounded-2xl mb-2 text-xl">👥</div>
+                <span class="text-[9px] font-black uppercase tracking-widest text-center leading-tight">Database<br>Pelanggan</span>
+            </button>
+        </div>
+
+        <div class="mt-8 space-y-4 pb-10">
+            <div class="bg-blue-900 p-7 rounded-[2.5rem] text-white relative overflow-hidden shadow-xl">
+                <p class="text-[9px] font-black uppercase tracking-widest opacity-70 mb-1">Setoran Kotor Anda</p>
+                <h3 id="admin-omzet" class="text-4xl font-black italic text-[#fff100] tracking-tighter leading-none">Rp 0</h3>
+                <div class="mt-5 grid grid-cols-2 gap-3 border-t border-white/20 pt-4">
+                    <div>
+                        <p class="text-[8px] font-bold uppercase opacity-60 mb-1">TUNAI (CASH)</p>
+                        <p id="admin-cash" class="text-lg font-black text-emerald-300">Rp 0</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[8px] font-bold uppercase opacity-60 mb-1">TRANSFER (TF)</p>
+                        <p id="admin-tf" class="text-lg font-black text-blue-300">Rp 0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white p-5 rounded-[2rem] border-2 border-slate-100 shadow-sm text-center">
+                    <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Komisi Anda</p>
+                    <p id="admin-komisi" class="text-xl font-black text-blue-900">Rp 0</p>
+                </div>
+                <div class="bg-emerald-500 p-5 rounded-[2rem] shadow-sm text-white text-center">
+                    <p class="text-[8px] font-bold uppercase tracking-widest opacity-80 mb-1">Net Setoran</p>
+                    <p id="admin-setoran" class="text-xl font-black italic">Rp 0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-admin-view" class="page-section p-5 bg-white min-h-screen pb-24 fade-in">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h3 id="view-title" class="text-xl font-black text-blue-900 italic uppercase tracking-tighter">DATA</h3>
+                <p id="view-count" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">0 PELANGGAN</p>
+            </div>
+            <button onclick="backToAdminMenu()" class="bg-slate-100 text-slate-500 px-6 py-2 rounded-2xl font-black text-[10px] uppercase tracking-widest active:translate-y-1">KEMBALI</button>
+        </div>
+
+        <div id="btn-add-container" class="hidden mb-6">
+            <button onclick="openModalForm(-1)" class="w-full bg-blue-900 text-[#fff100] py-4 rounded-[2rem] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 active:translate-y-1">
+                + TAMBAH PELANGGAN
+            </button>
+        </div>
+
+        <div id="search-container" class="mb-6">
+            <input type="text" id="search-input" oninput="renderAdminList()" placeholder="CARI NAMA / ID..." class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl font-bold uppercase text-xs outline-none focus:border-blue-900 shadow-sm">
+        </div>
+
+        <div id="data-container" class="space-y-4 pb-10"></div>
+    </div>
+</div>
+
+<div id="modal-admin-detail" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[2000] hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+        <div class="bg-blue-900 p-5 flex justify-between items-center shrink-0">
+            <div>
+                <h4 id="detail-admin-name" class="font-black uppercase text-[#fff100] tracking-tight text-lg italic leading-none">NAMA ADMIN</h4>
+                <p class="text-[8px] font-bold text-blue-300 uppercase tracking-widest mt-1">Daftar Transaksi Lunas</p>
+            </div>
+            <button onclick="closeAdminDetail()" class="bg-white/20 text-white w-8 h-8 rounded-full font-black">✕</button>
+        </div>
+        <div class="p-4 bg-slate-50 flex-1 overflow-y-auto custom-scroll space-y-3" id="admin-detail-list"></div>
+    </div>
+</div>
+
+<div id="modal-payment" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[2000] hidden flex items-center justify-center p-5">
+    <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-6 text-center shadow-2xl border-4 border-emerald-500 fade-in">
+        <h4 class="font-black uppercase text-emerald-600 tracking-tighter text-xl mb-1 italic leading-none">KONFIRMASI BAYAR</h4>
+        <p id="pay-name" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 border-b pb-4 leading-none">NAMA PELANGGAN</p>
+        <div class="space-y-3">
+            <button onclick="processPayment('LUNAS')" class="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest border-b-4 border-black/20 active:translate-y-1 active:border-b-0">💵 TUNAI (CASH)</button>
+            <button onclick="processPayment('TF')" class="w-full bg-blue-500 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest border-b-4 border-black/20 active:translate-y-1 active:border-b-0">📱 TRANSFER BANK (TF)</button>
+            <button onclick="closePaymentModal()" class="w-full bg-slate-100 text-slate-500 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest active:translate-y-1 mt-4">BATAL</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-form" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[1000] hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-blue-900 fade-in flex flex-col max-h-[90vh]">
+        <div class="bg-blue-900 p-5 text-center border-b-4 border-white/10 shrink-0">
+            <h4 id="modal-title" class="font-black uppercase text-[#fff100] tracking-tight text-lg italic">FORM DATA</h4>
+        </div>
+        <div class="p-5 space-y-4 overflow-y-auto custom-scroll flex-1">
+            <input type="hidden" id="f-index" value="-1">
+            <input type="hidden" id="f-docid" value="">
+            <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 leading-none">Nama Lengkap</label><input type="text" id="f-nama" class="w-full bg-slate-50 border-2 border-slate-100 p-3.5 rounded-2xl outline-none font-bold uppercase text-sm focus:border-blue-500"></div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 leading-none">ID Pelanggan</label><input type="text" id="f-id" placeholder="DN-001" class="w-full bg-slate-50 border-2 border-slate-100 p-3.5 rounded-2xl outline-none font-black text-blue-900 uppercase text-sm focus:border-blue-500"></div>
+                <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 leading-none">Mbps</label><input type="number" id="f-speed" placeholder="10" class="w-full bg-slate-50 border-2 border-slate-100 p-3.5 rounded-2xl outline-none font-black text-orange-600 text-sm focus:border-blue-500"></div>
+            </div>
+            <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 leading-none">Alamat / Blok</label><input type="text" id="f-alamat" class="w-full bg-slate-50 border-2 border-slate-100 p-3.5 rounded-2xl outline-none font-bold uppercase text-sm focus:border-blue-500"></div>
+            <div class="space-y-1"><label class="text-[9px] font-black text-emerald-500 uppercase tracking-widest ml-1 leading-none">WA (Otomatis 62)</label><input type="number" id="f-wa" placeholder="08..." class="w-full bg-slate-50 border-2 border-slate-100 p-3.5 rounded-2xl outline-none font-black text-emerald-600 text-sm focus:border-blue-500"></div>
+            <div class="space-y-1"><label class="text-[9px] font-black text-blue-600 uppercase tracking-widest ml-1 leading-none">Tagihan (Rp)</label><input type="number" id="f-tagihan" value="150000" class="w-full bg-slate-50 border-2 border-slate-100 p-3.5 rounded-2xl outline-none font-black text-blue-900 text-sm focus:border-blue-500"></div>
+            <div class="space-y-1"><label class="text-[9px] font-black text-red-500 uppercase tracking-widest ml-1 leading-none">Status</label>
+                <select id="f-status" class="w-full bg-slate-50 border-2 border-slate-100 p-3.5 rounded-2xl font-black text-slate-700 outline-none text-xs appearance-none">
+                    <option value="BELUM BAYAR">❌ BELUM BAYAR</option>
+                    <option value="LUNAS">💵 LUNAS (CASH)</option>
+                    <option value="TF">📱 LUNAS (TRANSFER)</option>
+                </select>
+            </div>
+        </div>
+        <div class="p-5 border-t border-slate-100 flex gap-3 shrink-0">
+            <button onclick="closeModalForm()" class="flex-1 bg-slate-100 py-4 rounded-xl font-black text-slate-400 uppercase text-[10px] tracking-widest">BATAL</button>
+            <button onclick="saveData()" class="flex-[2] bg-blue-900 text-[#fff100] py-4 rounded-xl font-black uppercase text-[10px] tracking-widest active:translate-y-1">SIMPAN</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // --- EMAIL OWNER ---
+    const OWNER_EMAILS = [
+        'daffaazharee@gmail.com', 
+        'dewamaharani54@gmail.com',
+        'cktfaishal@gmail.com'
+    ];
+
+    const KOMISI_RATE = 5000;
+    
+    // --- KODE FIREBASE DAVA.NET ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBPnXDhU0PwoLJAB3rREgx9aSxv7FCCh6w",
+      authDomain: "etdn-dava-net.firebaseapp.com",
+      projectId: "etdn-dava-net",
+      storageBucket: "etdn-dava-net.firebasestorage.app",
+      messagingSenderId: "269684825835",
+      appId: "1:269684825835:web:e927c93b7c531a4d2728ae",
+      measurementId: "G-BB7D7WMDKE"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    const db = getFirestore(app);
+    const appId = 'davanet-pro';
+
+    window.db_pelanggan = [];
+    window.currentUser = null;
+    window.current_view = 'menu';
+    window.payment_index = -1;
+    let unsubscribeDb = null;
+    let authReady = false;
+
+    // --- SYSTEM LOGIN GOOGLE ASLI ---
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            authReady = true;
+            const email = user.email.toLowerCase();
+
+            if (OWNER_EMAILS.includes(email)) {
+                window.currentUser = { email: email, role: 'owner', name: 'OWNER DAVA.NET' };
+                startFirestoreListener();
+                window.setupUIBasedOnRole();
+            } else {
+                const savedName = localStorage.getItem('davanet_admin_name_' + user.uid);
+                if (savedName) {
+                    window.currentUser = { email: email, role: 'admin', name: savedName };
+                    startFirestoreListener();
+                    window.setupUIBasedOnRole();
+                } else {
+                    window.tempUser = user;
+                    document.getElementById('portal-login').classList.add('hidden');
+                    document.getElementById('reg-admin-name').value = user.displayName || '';
+                    document.getElementById('modal-register').classList.remove('hidden');
+                }
+            }
+        } else {
+            window.currentUser = null;
+            if(unsubscribeDb) unsubscribeDb();
+            window.showLogin();
+        }
+    });
+
+    window.openGoogleLogin = function() {
+        const btnText = document.getElementById('btn-text');
+        btnText.innerText = "Memuat Google...";
+        
+        signInWithPopup(auth, provider).catch((error) => {
+            console.error(error);
+            btnText.innerText = "Masuk dengan Google";
+            if(error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+                alert("Gagal terhubung ke Google: Pastikan domain GitHub Anda (daffaazharee-art.github.io) sudah didaftarkan di Firebase -> Authentication -> Settings -> Authorized domains.");
+            }
+        });
+    };
+
+    window.processRegister = function() {
+        const name = document.getElementById('reg-admin-name').value.trim();
+        if(!name) return alert("Nama Admin wajib diisi!");
+        
+        localStorage.setItem('davanet_admin_name_' + window.tempUser.uid, name.toUpperCase());
+        window.currentUser = { email: window.tempUser.email, role: 'admin', name: name.toUpperCase() };
+        
+        document.getElementById('modal-register').classList.add('hidden');
+        startFirestoreListener();
+        window.setupUIBasedOnRole();
+    };
+
+    window.logout = function() {
+        if(confirm("Yakin ingin keluar dari akun?")) {
+            signOut(auth).catch((error) => alert("Gagal keluar: " + error.message));
+        }
+    };
+
+    // --- LOGIKA TAMPILAN ---
+    window.showLogin = function() {
+        document.getElementById('app-container').classList.add('hidden');
+        document.getElementById('portal-login').classList.remove('hidden');
+        document.getElementById('portal-login').classList.add('flex');
+        document.getElementById('btn-text').innerText = "Masuk dengan Google";
+    };
+
+    window.setupUIBasedOnRole = function() {
+        if(!window.currentUser) return;
+        
+        document.getElementById('portal-login').classList.add('hidden');
+        document.getElementById('portal-login').classList.remove('flex');
+        
+        document.getElementById('app-container').classList.remove('hidden');
+        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+
+        if(window.currentUser.role === 'owner') {
+            document.getElementById('header-role').innerText = "AKSES: OWNER";
+            document.getElementById('section-owner').classList.add('active');
+            updateOwnerDashboard();
+        } else {
+            document.getElementById('header-role').innerText = `ADMIN: ${window.currentUser.name}`;
+            document.getElementById('admin-welcome-name').innerText = window.currentUser.name;
+            document.getElementById('section-admin-menu').classList.add('active');
+            updateAdminStats();
+        }
+    };
+
+    // --- FIRESTORE DATABASE (REAL-TIME CLOUD) ---
+    function startFirestoreListener() {
+        if(!authReady) return;
+        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'pelanggan');
+        
+        unsubscribeDb = onSnapshot(colRef, (snapshot) => {
+            window.db_pelanggan = [];
+            snapshot.forEach(docSnap => {
+                window.db_pelanggan.push({ ...docSnap.data(), docId: docSnap.id });
+            });
+            checkAutoResetCloud(); 
+            
+            if(window.currentUser) {
+                if(window.currentUser.role === 'owner') updateOwnerDashboard();
+                else {
+                    updateAdminStats();
+                    if(window.current_view !== 'menu') window.renderAdminList();
+                }
+            }
+        }, (err) => { 
+            console.error("Firebase Read Error:", err); 
+        });
+    }
+
+    async function syncDataToCloud(dataObj) {
+        if(!dataObj.docId) dataObj.docId = Date.now().toString() + Math.random().toString(36).substring(7);
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'pelanggan', dataObj.docId);
+        try { await setDoc(docRef, dataObj); } catch(e) { console.error(e); }
+    }
+
+    async function deleteDataFromCloud(docId) {
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'pelanggan', docId);
+        try { await deleteDoc(docRef); } catch(e) { console.error(e); }
+    }
+
+    // --- AUTO RESET BULANAN ---
+    function checkAutoResetCloud() {
+        if(!window.db_pelanggan || window.db_pelanggan.length === 0) return;
+        const now = new Date();
+        const thisMonth = now.getMonth() + '-' + now.getFullYear();
+        const lastReset = localStorage.getItem('davanet_auto_cloud_v1');
+        
+        if (now.getDate() === 1 && lastReset !== thisMonth) {
+            localStorage.setItem('davanet_auto_cloud_v1', thisMonth);
+            let count = 0;
+            window.db_pelanggan.forEach(p => {
+                if(p.status !== 'BELUM BAYAR') {
+                    p.status = 'BELUM BAYAR';
+                    p.admin = null;
+                    syncDataToCloud(p);
+                    count++;
+                }
+            });
+            if(count > 0) alert("Bulan baru! Sistem telah mereset seluruh database pelanggan menjadi Belum Bayar.");
+        }
+    }
+
+    // --- OWNER DASHBOARD LOGIC ---
+    function updateOwnerDashboard() {
+        const cashData = window.db_pelanggan.filter(p => p.status === 'LUNAS');
+        const tfData = window.db_pelanggan.filter(p => p.status === 'TF');
+        const belumData = window.db_pelanggan.filter(p => p.status === 'BELUM BAYAR');
+        
+        const tCash = cashData.reduce((s, p) => s + Number(p.tagihan), 0);
+        const tTf = tfData.reduce((s, p) => s + Number(p.tagihan), 0);
+        const tOmzet = tCash + tTf;
+        const tPiutang = belumData.reduce((s, p) => s + Number(p.tagihan), 0);
+        const tKomisi = (cashData.length + tfData.length) * KOMISI_RATE;
+
+        document.getElementById('owner-omzet').innerText = `Rp ${tOmzet.toLocaleString()}`;
+        document.getElementById('owner-cash').innerText = `Rp ${tCash.toLocaleString()}`;
+        document.getElementById('owner-tf').innerText = `Rp ${tTf.toLocaleString()}`;
+        document.getElementById('owner-piutang').innerText = `Rp ${tPiutang.toLocaleString()}`;
+        document.getElementById('owner-total-komisi').innerText = `Rp ${tKomisi.toLocaleString()}`;
+
+        let adminStats = {};
+        window.db_pelanggan.forEach(p => {
+            if(p.status === 'LUNAS' || p.status === 'TF') {
+                const aName = p.admin || 'Admin Tidak Diketahui';
+                if(!adminStats[aName]) adminStats[aName] = { count: 0, omzet: 0, list: [] };
+                adminStats[aName].count += 1;
+                adminStats[aName].omzet += Number(p.tagihan);
+                adminStats[aName].list.push(p);
+            }
+        });
+
+        const listContainer = document.getElementById('owner-admin-list');
+        listContainer.innerHTML = '';
+        
+        if(Object.keys(adminStats).length === 0) {
+            listContainer.innerHTML = '<div class="bg-white p-5 rounded-2xl border-2 border-slate-100 text-center"><p class="text-[10px] text-slate-400 font-bold italic">Belum ada data penagihan Lunas.</p></div>';
+        } else {
+            for (const [name, data] of Object.entries(adminStats)) {
+                const komisi = data.count * KOMISI_RATE;
+                const net = data.omzet - komisi;
+                const dataJson = encodeURIComponent(JSON.stringify(data.list));
+                
+                listContainer.innerHTML += `
+                    <div onclick="openAdminDetail('${name}', '${dataJson}')" class="bg-white p-5 rounded-2xl shadow-sm border-2 border-slate-100 flex justify-between items-center cursor-pointer active:scale-95 transition-transform hover:border-blue-300">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-emerald-100 text-emerald-600 text-[7px] px-2 py-0.5 rounded font-black uppercase">AKTIF</span>
+                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Penagih:</p>
+                            </div>
+                            <h4 class="font-black text-blue-900 uppercase text-sm leading-none italic">${name}</h4>
+                            <p class="text-[9px] font-bold text-slate-500 mt-1">${data.count} Transaksi Lunas</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Setoran Bersih</p>
+                            <p class="font-black text-blue-900 text-sm leading-none italic">Rp ${net.toLocaleString()}</p>
+                            <p class="font-bold text-orange-500 text-[8px] mt-1 uppercase">Komisi: Rp ${komisi.toLocaleString()}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    window.openAdminDetail = function(adminName, dataJson) {
+        const dataList = JSON.parse(decodeURIComponent(dataJson));
+        document.getElementById('detail-admin-name').innerText = `ADMIN: ${adminName}`;
+        const container = document.getElementById('admin-detail-list');
+        container.innerHTML = '';
+        
+        dataList.forEach(p => {
+            const method = p.status === 'LUNAS' ? '💵 CASH' : '📱 TF';
+            container.innerHTML += `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-start mb-1">
+                        <div>
+                            <span class="bg-blue-900 text-[#fff100] text-[7px] px-2 py-0.5 rounded font-black uppercase">${p.cid}</span>
+                            <h5 class="font-black text-slate-800 text-xs mt-1 uppercase leading-tight">${p.nama}</h5>
+                        </div>
+                        <span class="text-[8px] font-black ${p.status === 'LUNAS' ? 'text-emerald-600' : 'text-blue-600'} bg-slate-100 px-2 py-1 rounded">${method}</span>
+                    </div>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase mt-1 leading-tight">${p.alamat}</p>
+                    <p class="text-xs font-black text-blue-900 mt-1 italic">Rp ${Number(p.tagihan).toLocaleString()}</p>
+                </div>
+            `;
+        });
+        document.getElementById('modal-admin-detail').classList.remove('hidden');
+    };
+    
+    window.closeAdminDetail = function() { document.getElementById('modal-admin-detail').classList.add('hidden'); };
+
+    // FUNGSI EXPORT EXCEL OWNER (TIDAK DIHAPUS, KHUSUS UNTUK BACKUP OWNER)
+    window.exportOwnerData = function() {
+        if(window.db_pelanggan.length === 0) return alert("Database Kosong!");
+        const dataFormat = window.db_pelanggan.map(p => ({
+            "ID PELANGGAN": p.cid,
+            "NAMA LENGKAP": p.nama,
+            "ALAMAT": p.alamat,
+            "SPEED (Mbps)": p.speed,
+            "NO WA": p.wa,
+            "TAGIHAN (Rp)": Number(p.tagihan),
+            "STATUS": p.status,
+            "DITAGIH OLEH (ADMIN)": p.admin || '-'
+        }));
+        
+        const ws = XLSX.utils.json_to_sheet(dataFormat);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Master Data DavaNet");
+        XLSX.writeFile(wb, `Master_DavaNet_${new Date().toLocaleDateString('id-ID')}.xlsx`);
+    };
+
+    // --- ADMIN DASHBOARD & LOGIC ---
+    function updateAdminStats() {
+        if(!window.currentUser || window.currentUser.role !== 'admin') return;
+
+        const myLunas = window.db_pelanggan.filter(p => p.admin === window.currentUser.name && p.status === 'LUNAS');
+        const myTf = window.db_pelanggan.filter(p => p.admin === window.currentUser.name && p.status === 'TF');
+        
+        const myCashTotal = myLunas.reduce((s, p) => s + Number(p.tagihan), 0);
+        const myTfTotal = myTf.reduce((s, p) => s + Number(p.tagihan), 0);
+        const myOmzet = myCashTotal + myTfTotal;
+        const myKomisi = (myLunas.length + myTf.length) * KOMISI_RATE;
+        const mySetoran = myOmzet - myKomisi;
+
+        document.getElementById('admin-omzet').innerText = `Rp ${myOmzet.toLocaleString()}`;
+        document.getElementById('admin-cash').innerText = `Rp ${myCashTotal.toLocaleString()}`;
+        document.getElementById('admin-tf').innerText = `Rp ${myTfTotal.toLocaleString()}`;
+        document.getElementById('admin-komisi').innerText = `Rp ${myKomisi.toLocaleString()}`;
+        document.getElementById('admin-setoran').innerText = `Rp ${mySetoran.toLocaleString()}`;
+    }
+
+    // LOGIKA NAVIGASI ADMIN TERBARU
+    window.navigateAdmin = function(view) {
+        window.current_view = view;
+        document.getElementById('section-admin-menu').classList.remove('active');
+        document.getElementById('section-admin-view').classList.add('active');
+        document.getElementById('btn-add-container').classList.add('hidden');
+        document.getElementById('data-container').classList.remove('hidden');
+
+        if (view === 'lunas_cash') document.getElementById('view-title').innerText = "Riwayat Lunas (CASH)";
+        if (view === 'lunas_tf') document.getElementById('view-title').innerText = "Riwayat Lunas (TF)";
+        if (view === 'belum') document.getElementById('view-title').innerText = "Belum Bayar";
+        if (view === 'database') {
+            document.getElementById('view-title').innerText = "Database Pelanggan";
+            document.getElementById('btn-add-container').classList.remove('hidden');
+        }
+        
+        window.renderAdminList();
+        window.scrollTo(0,0);
+    };
+
+    window.backToAdminMenu = function() {
+        document.getElementById('section-admin-view').classList.remove('active');
+        document.getElementById('section-admin-menu').classList.add('active');
+        updateAdminStats();
+    };
+
+    // LOGIKA FILTER LIST ADMIN TERBARU
+    window.renderAdminList = function() {
+        const container = document.getElementById('data-container');
+        container.innerHTML = '';
+        let filtered = window.db_pelanggan;
+        
+        if (window.current_view === 'lunas_cash') filtered = window.db_pelanggan.filter(p => p.status === 'LUNAS');
+        if (window.current_view === 'lunas_tf') filtered = window.db_pelanggan.filter(p => p.status === 'TF');
+        if (window.current_view === 'belum') filtered = window.db_pelanggan.filter(p => p.status === 'BELUM BAYAR');
+        
+        const search = document.getElementById('search-input').value.toUpperCase();
+        if (search) filtered = filtered.filter(p => p.nama.includes(search) || p.cid.includes(search));
+
+        document.getElementById('view-count').innerText = `${filtered.length} PELANGGAN`;
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="text-center py-20 opacity-20 font-black italic uppercase text-[10px] tracking-widest">Kosong</div>`;
+            return;
+        }
+
+        filtered.forEach((p, index) => {
+            const actualIndex = window.db_pelanggan.findIndex(x => x.docId === p.docId);
+            
+            let badge = '';
+            if (p.status === 'LUNAS') badge = '<span class="px-2 py-0.5 rounded-full text-[7px] font-black bg-emerald-100 text-emerald-600 border border-emerald-200">💵 TUNAI</span>';
+            else if (p.status === 'TF') badge = '<span class="px-2 py-0.5 rounded-full text-[7px] font-black bg-blue-100 text-blue-600 border border-blue-200">📱 TF</span>';
+            else badge = '<span class="px-2 py-0.5 rounded-full text-[7px] font-black bg-rose-100 text-rose-600 border border-rose-200">❌ BELUM</span>';
+
+            let adminTag = '';
+            if(p.status !== 'BELUM BAYAR' && p.admin) {
+                adminTag = `<p class="text-[7px] font-bold text-slate-400 mt-2 bg-slate-50 inline-block px-2 py-1 rounded border border-slate-100">Ditagih: ${p.admin}</p>`;
+            }
+
+            let btns = '';
+            if (window.current_view === 'belum') {
+                btns = `<div class="flex gap-2 mt-3 pt-3 border-t border-slate-50">
+                    <button onclick="openPaymentModal(${actualIndex})" class="flex-[3] bg-emerald-500 text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-md active:translate-y-1">✅ KONFIRMASI LUNAS</button>
+                    <button onclick="sendWA(${actualIndex})" class="flex-1 wa-bg text-white py-3 rounded-xl flex items-center justify-center font-bold text-xs shadow-md active:translate-y-1">WA</button>
+                </div>`;
+            } else if (window.current_view === 'lunas_cash' || window.current_view === 'lunas_tf') {
+                btns = `<div class="flex gap-2 mt-3 pt-3 border-t border-slate-50">
+                    <button onclick="revertStatus(${actualIndex})" class="flex-[3] bg-slate-100 text-slate-500 py-3 rounded-xl font-black text-[10px] uppercase active:translate-y-1 border border-slate-200">BATALKAN LUNAS</button>
+                    <button onclick="sendWA(${actualIndex})" class="flex-1 wa-bg text-white py-3 rounded-xl flex items-center justify-center font-bold text-xs shadow-md active:translate-y-1">WA</button>
+                </div>`;
+            } else if (window.current_view === 'database') {
+                btns = `<div class="flex gap-2 mt-3 pt-3 border-t border-slate-50">
+                    <button onclick="openModalForm(${actualIndex})" class="flex-1 bg-blue-50 text-blue-700 border border-blue-200 py-2.5 rounded-xl font-black text-[10px] uppercase active:scale-95">✏️ EDIT</button>
+                    <button onclick="deleteData(${actualIndex})" class="flex-1 bg-rose-50 text-rose-600 border border-rose-200 py-2.5 rounded-xl font-black text-[10px] uppercase active:scale-95">🗑️ HAPUS</button>
+                </div>`;
+            }
+
+            container.innerHTML += `
+                <div class="bg-white border-2 border-slate-100 p-4 rounded-[2rem] shadow-sm relative fade-in">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1 pr-2">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-blue-900 text-[#fff100] text-[8px] px-2 py-0.5 rounded font-black uppercase leading-none">${p.cid}</span>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">${p.alamat}</p>
+                            </div>
+                            <h4 class="font-black text-blue-900 text-lg uppercase italic leading-tight mb-1">${p.nama}</h4>
+                            <p class="text-sm font-black text-rose-500 italic leading-none">Rp ${Number(p.tagihan).toLocaleString()}</p>
+                            ${adminTag}
+                        </div>
+                        <div class="text-right">${badge}</div>
+                    </div>
+                    ${btns}
+                </div>
+            `;
+        });
+    };
+
+    window.openPaymentModal = function(i) {
+        window.payment_index = i;
+        document.getElementById('pay-name').innerText = window.db_pelanggan[i].nama;
+        document.getElementById('modal-payment').classList.remove('hidden');
+    };
+    window.closePaymentModal = function() { document.getElementById('modal-payment').classList.add('hidden'); };
+    
+    window.processPayment = function(method) {
+        let p = window.db_pelanggan[window.payment_index];
+        p.status = method;
+        p.admin = window.currentUser.name; 
+        syncDataToCloud(p);
+        closePaymentModal();
+    };
+
+    window.revertStatus = function(i) {
+        if(confirm("Batalkan status lunas?")) {
+            let p = window.db_pelanggan[i];
+            p.status = 'BELUM BAYAR';
+            p.admin = null;
+            syncDataToCloud(p);
+        }
+    };
+
+    window.openModalForm = function(i = -1) {
+        const m = document.getElementById('modal-form');
+        document.getElementById('f-index').value = i;
+        
+        if(i > -1) {
+            const p = window.db_pelanggan[i];
+            document.getElementById('modal-title').innerText = "EDIT PELANGGAN";
+            document.getElementById('f-docid').value = p.docId;
+            document.getElementById('f-nama').value = p.nama; document.getElementById('f-id').value = p.cid;
+            document.getElementById('f-alamat').value = p.alamat; document.getElementById('f-wa').value = p.wa;
+            document.getElementById('f-speed').value = p.speed || '10'; document.getElementById('f-tagihan').value = p.tagihan;
+            document.getElementById('f-status').value = p.status;
+        } else {
+            document.getElementById('modal-title').innerText = "INPUT DATA BARU";
+            document.getElementById('f-docid').value = "";
+            document.getElementById('f-nama').value = ''; document.getElementById('f-id').value = '';
+            document.getElementById('f-alamat').value = ''; document.getElementById('f-wa').value = '';
+            document.getElementById('f-speed').value = '10'; document.getElementById('f-tagihan').value = '150000';
+            document.getElementById('f-status').value = 'BELUM BAYAR';
+        }
+        m.classList.remove('hidden');
+    };
+    
+    window.closeModalForm = function() { document.getElementById('modal-form').classList.add('hidden'); };
+    
+    window.saveData = function() {
+        const i = parseInt(document.getElementById('f-index').value);
+        const name = document.getElementById('f-nama').value.trim();
+        const tagihan = document.getElementById('f-tagihan').value;
+        let wa = document.getElementById('f-wa').value.trim();
+        const status = document.getElementById('f-status').value;
+        
+        if(!name || !tagihan) return alert("Data tidak lengkap!");
+        
+        if(wa.startsWith('0')) {
+            wa = '62' + wa.substring(1);
+        } else if (!wa.startsWith('62') && wa.length > 5) {
+            wa = '62' + wa;
+        }
+        
+        const data = {
+            docId: document.getElementById('f-docid').value || null,
+            cid: document.getElementById('f-id').value.toUpperCase() || 'DN-' + Math.floor(Math.random() * 1000),
+            nama: name.toUpperCase(), 
+            alamat: document.getElementById('f-alamat').value.toUpperCase(),
+            wa: wa, 
+            speed: document.getElementById('f-speed').value, 
+            tagihan: tagihan, 
+            status: status,
+            admin: status !== 'BELUM BAYAR' ? (i > -1 ? window.db_pelanggan[i].admin || window.currentUser.name : window.currentUser.name) : null
+        };
+        
+        syncDataToCloud(data);
+        closeModalForm();
+    };
+
+    window.deleteData = function(i) {
+        if(confirm("Hapus pelanggan dari server permanen?")) {
+            deleteDataFromCloud(window.db_pelanggan[i].docId);
+        }
+    };
+
+    window.sendWA = function(i) {
+        const p = window.db_pelanggan[i];
+        const msg = `Halo Bapak/Ibu yang terhormat,\n\nNama: ${p.nama}\nAlamat: ${p.alamat}\nID Pelanggan: ${p.cid}\nTagihan: Rp ${Number(p.tagihan).toLocaleString()}\n\nMohon membayar tagihan anda sebelum tanggal 5.\nTerima kasih.`;
+        window.location.href = `https://wa.me/${p.wa}?text=${encodeURIComponent(msg)}`;
+    };
+
+</script>
+</body>
+</html>
+
+
